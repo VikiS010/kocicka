@@ -157,7 +157,7 @@ function chooseMouseDirection(mouse) {
   }
   const reverse = {dx: -mouse.dx, dy: -mouse.dy};
   const forward = options.filter(opt => opt.dx !== reverse.dx || opt.dy !== reverse.dy);
-  const pick = forward.length ? forward[Math.floor(Math.random() * forward.length)] : options[Math.floor(Math.random() * options.length)];
+  const pick = forward.length > 0 ? forward[Math.floor(Math.random() * forward.length)] : options[Math.floor(Math.random() * options.length)];
   mouse.dx = pick.dx;
   mouse.dy = pick.dy;
 }
@@ -167,7 +167,7 @@ function resetMouse(mouse) {
   mouse.col = mouse.spawn.col;
   mouse.x = mouse.col * tileSize + tileSize / 2;
   mouse.y = mouse.row * tileSize + tileSize / 2;
-  mouse.dx = Math.random() > 0.5 ? 1 : -1;
+  mouse.dx = 1;
   mouse.dy = 0;
   mouse.eaten = false;
   mouse.respawnTimer = 0;
@@ -180,26 +180,39 @@ function updateMouse(mouse, dt) {
     return;
   }
 
-  const tile = currentTile(mouse.x, mouse.y);
-  mouse.row = tile.row;
-  mouse.col = tile.col;
-  if (Math.abs(mouse.x - (mouse.col * tileSize + tileSize / 2)) < 2 && Math.abs(mouse.y - (mouse.row * tileSize + tileSize / 2)) < 2) {
-    snapToCenter(mouse);
-    if (!canEnter(mouse.row + mouse.dy, mouse.col + mouse.dx) || (mouse.dx === 0 && mouse.dy === 0)) {
+  const centerX = mouse.col * tileSize + tileSize / 2;
+  const centerY = mouse.row * tileSize + tileSize / 2;
+  const distToCenter = Math.hypot(mouse.x - centerX, mouse.y - centerY);
+
+  if (distToCenter < 1) {
+    mouse.x = centerX;
+    mouse.y = centerY;
+    if (mouse.dx === 0 && mouse.dy === 0) {
       chooseMouseDirection(mouse);
     }
+    if (!canEnter(mouse.row + mouse.dy, mouse.col + mouse.dx)) {
+      chooseMouseDirection(mouse);
+    }
+  }
+
+  if (mouse.dx === 0 && mouse.dy === 0) {
+    return;
   }
 
   const nextX = mouse.x + mouse.dx * mouseSpeed * dt;
   const nextY = mouse.y + mouse.dy * mouseSpeed * dt;
   const nextTile = currentTile(nextX, nextY);
+
   if (canEnter(nextTile.row, nextTile.col)) {
     mouse.x = nextX;
     mouse.y = nextY;
+    mouse.row = nextTile.row;
+    mouse.col = nextTile.col;
   } else {
     mouse.dx = 0;
     mouse.dy = 0;
-    snapToCenter(mouse);
+    mouse.x = centerX;
+    mouse.y = centerY;
   }
 }
 
