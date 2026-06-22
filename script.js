@@ -49,6 +49,8 @@ let activeDirection = null;
 let score = 0;
 let lastTime = 0;
 
+const mouseSpeed = 110;
+
 const cat = {
   row: 27,
   col: 13,
