@@ -2,6 +2,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const statusEl = document.getElementById('status');
+const livesEl = document.getElementById('lives');
 
 const tileSize = 24;
 const map = [
@@ -47,6 +48,8 @@ const directions = {
 
 let activeDirection = null;
 let score = 0;
+let lives = 3;
+let gameOver = false;
 let lastTime = 0;
 
 const mouseSpeed = 110;
@@ -81,6 +84,25 @@ const mice = mouseSpawns.map((spawn, index) => ({
   color: ['#f6f3ce', '#d2b0ff', '#ffb3c1', '#a6ffb2', '#ffd67f', '#80d8ff'][index],
   eaten: false,
   respawnTimer: 0
+}));
+
+const ghostSpawns = [
+  {row: 12, col: 6},
+  {row: 12, col: 20},
+  {row: 4, col: 13}
+];
+
+const ghosts = ghostSpawns.map((spawn, index) => ({
+  spawn,
+  row: spawn.row,
+  col: spawn.col,
+  x: spawn.col * tileSize + tileSize / 2,
+  y: spawn.row * tileSize + tileSize / 2,
+  dx: 0,
+  dy: 0,
+  color: ['#ff6b9d', '#ff9ff3', '#54a0ff'][index],
+  speed: 130,
+  moveCounter: 0
 }));
 
 function canEnter(row, col) {
@@ -216,9 +238,67 @@ function updateMouse(mouse, dt) {
   }
 }
 
+function updateGhost(ghost, dt) {
+  const centerX = ghost.col * tileSize + tileSize / 2;
+  const centerY = ghost.row * tileSize + tileSize / 2;
+  const distToCenter = Math.hypot(ghost.x - centerX, ghost.y - centerY);
+
+  if (distToCenter < 1) {
+    ghost.x = centerX;
+    ghost.y = centerY;
+    ghost.moveCounter++;
+    if (ghost.moveCounter > 30) {
+      ghost.moveCounter = 0;
+      const options = [];
+      for (const dir in directions) {
+        const {dx, dy} = directions[dir];
+        if (canEnter(ghost.row + dy, ghost.col + dx)) {
+          options.push({dx, dy});
+        }
+      }
+      if (options.length > 0) {
+        const catRelX = cat.col - ghost.col;
+        const catRelY = cat.row - ghost.row;
+        let bestDir = options[0];
+        let bestDist = Math.abs(catRelX) + Math.abs(catRelY);
+        for (const dir of options) {
+          const newDist = Math.abs(catRelX - dir.dx) + Math.abs(catRelY - dir.dy);
+          if (newDist < bestDist) {
+            bestDist = newDist;
+            bestDir = dir;
+          }
+        }
+        ghost.dx = bestDir.dx;
+        ghost.dy = bestDir.dy;
+      }
+    }
+  }
+
+  if (ghost.dx === 0 && ghost.dy === 0) {
+    return;
+  }
+
+  const nextX = ghost.x + ghost.dx * ghost.speed * dt;
+  const nextY = ghost.y + ghost.dy * ghost.speed * dt;
+  const nextTile = currentTile(nextX, nextY);
+
+  if (canEnter(nextTile.row, nextTile.col)) {
+    ghost.x = nextX;
+    ghost.y = nextY;
+    ghost.row = nextTile.row;
+    ghost.col = nextTile.col;
+  } else {
+    ghost.dx = 0;
+    ghost.dy = 0;
+  }
+}
+
 function update(dt) {
+  if (gameOver) return;
+
   updateCat(dt);
   mice.forEach(mouse => updateMouse(mouse, dt));
+  ghosts.forEach(ghost => updateGhost(ghost, dt));
 
   mice.forEach(mouse => {
     if (mouse.eaten) return;
@@ -231,6 +311,26 @@ function update(dt) {
       mouse.dx = 0;
       mouse.dy = 0;
       mouse.respawnTimer = 1.4;
+    }
+  });
+
+  ghosts.forEach(ghost => {
+    const distance = Math.hypot(cat.x - ghost.x, cat.y - ghost.y);
+    if (distance < tileSize * 0.7) {
+      lives -= 1;
+      livesEl.textContent = lives;
+      if (lives <= 0) {
+        gameOver = true;
+        statusEl.textContent = 'KONEC HRY! Skóre: ' + score;
+        cat.dx = 0;
+        cat.dy = 0;
+      } else {
+        statusEl.textContent = 'Střetl ses s duchem! Životů: ' + lives;
+        cat.x = 13 * tileSize + tileSize / 2;
+        cat.y = 27 * tileSize + tileSize / 2;
+        cat.row = 27;
+        cat.col = 13;
+      }
     }
   });
 }
@@ -283,6 +383,26 @@ function draw() {
     ctx.beginPath();
     ctx.arc(mouse.x - 5, mouse.y - 2, 2, 0, Math.PI * 2);
     ctx.arc(mouse.x + 5, mouse.y - 2, 2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ghosts.forEach(ghost => {
+    ctx.fillStyle = ghost.color;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.arc(ghost.x, ghost.y, tileSize * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.arc(ghost.x - 4, ghost.y - 3, 3, 0, Math.PI * 2);
+    ctx.arc(ghost.x + 4, ghost.y - 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(ghost.x - 4, ghost.y - 3, 1.5, 0, Math.PI * 2);
+    ctx.arc(ghost.x + 4, ghost.y - 3, 1.5, 0, Math.PI * 2);
     ctx.fill();
   });
 }
