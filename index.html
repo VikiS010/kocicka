@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kočička žere myšičky</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="game-shell">
+    <header>
+      <h1>Kočička žere myšičky</h1>
+      <p>Ovládání: šipky. Kočička i myšičky se pohybují po bludišti a nemohou procházet zdmi.</p>
+    </header>
+
+    <div class="canvas-wrap">
+      <canvas id="gameCanvas" width="672" height="672" aria-label="Hra Kočička žere myšičky"></canvas>
+    </div>
+
+    <div class="info">
+      <div>Skóre: <span id="score">0</span></div>
+      <div id="status">Stiskni šipky a chytni co nejvíce myšiček!</div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

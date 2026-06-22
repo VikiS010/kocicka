@@ -1,0 +1,82 @@
+:root {
+  color-scheme: dark;
+  --bg: #090b18;
+  --wall: #0d5fa8;
+  --path: #121a2f;
+  --cat: #f2a035;
+  --mouse: #f6f3ce;
+  --text: #f0f3ff;
+  --accent: #66ffb3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, #16204a 0%, #090b18 60%, #06070f 100%);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.game-shell {
+  width: min(100%, 760px);
+  padding: 24px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+}
+
+p {
+  margin: 8px auto 0;
+  max-width: 720px;
+  color: #c9d1ffcc;
+}
+
+.canvas-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+canvas {
+  width: 100%;
+  max-width: 672px;
+  border: 4px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  background: #03050d;
+  image-rendering: crisp-edges;
+}
+
+.info {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 1rem;
+  color: #d8e2ff;
+}
+
+#status {
+  color: var(--accent);
+}
+
+@media (max-width: 500px) {
+  .info {
+    flex-direction: column;
+    align-items: center;
+  }
+}
